@@ -4,12 +4,19 @@ const router = createRouter({
     history: createWebHashHistory(),
     routes: [{
             path: '/',
-            redirect: '/home'
+            redirect: '/home',
+            meta: {
+                keepAlive: true
+            }
         },
         {
             path: '/home',
+            name: 'home',
             component: () =>
                 import ('@/views/home/home.vue'),
+            meta: {
+                keepAlive: true
+            }
         },
         {
             path: '/favor',
@@ -33,7 +40,21 @@ const router = createRouter({
             meta: {
                 hideTabBar: true
             }
-        }
+        },
+        {
+            path: '/search',
+            component: () =>
+                import ('@/views/search/search.vue'),
+            meta: {
+                hideTabBar: true
+            }
+        },
+        {
+            path: '/detail/:id',
+            component: () =>
+                import ('@/views/detail/detail.vue'),
+
+        },
 
     ]
 })

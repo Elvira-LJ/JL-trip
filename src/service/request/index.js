@@ -1,22 +1,44 @@
 import axios from 'axios'
 import { BASE_URL, TINEOUT } from './config'
+import useMainStore from '@/stores/modules/main'
+
+const mainStore = useMainStore()
+
 class LJRequest {
     constructor(baseURL, timeout = 2000) {
         this.instance = axios.create({
-            baseURL,
-            timeout
+                baseURL,
+                timeout
+            })
+            //请求拦截
+        this.instance.interceptors.request.use((config) => {
+                mainStore.isLoading = true
+                return config
+            }, (err) => {
+                return err
+            })
+            //响应拦截
+        this.instance.interceptors.response.use((config) => {
+            mainStore.isLoading = false
+            return config
+        }, (err) => {
+            mainStore.isLoading = false
+            return err
         })
     }
 
     request(config) {
         //别人怎么知道你发送请求结束了没？封装一层promise
         return new Promise((resolve, reject) => {
+            // mainStore.isLoading = true
             this.instance.request(config).then(res => {
                 // console.log('res:',res)
                 resolve(res.data)
+                    // mainStore.isLoading = false
             }, err => {
                 // console.log('err:',err)
                 reject(err)
+                    // mainStore.isLoading = false
             })
         })
     }

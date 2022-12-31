@@ -49,8 +49,9 @@
       >{{ item.tagText.text }}</div>
     </template>
   </div>
+
   <div class="section search-btn">
-    <div class="btn">开始搜索</div>
+    <div class="btn" @click="seachBtn">开始搜索</div>
   </div>
   </div>
 </template>
@@ -58,9 +59,10 @@
 <script setup>
 import useCityStore from '@/stores/modules/city'
 import useHomeStore from '@/stores/modules/home'
+import useMainStore from '@/stores/modules/main';
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import {formatMonthDay,getDiffDays} from '@/utils/format_day'
 
 //从父组件拿数据
@@ -77,35 +79,31 @@ import {formatMonthDay,getDiffDays} from '@/utils/format_day'
   }
 
 //获取位置，拿到经纬度，发给服务器，服务器返回具体城市的地址
-  // const positionClick = ()=> {
-  //   navigator.geolocation.getCurrentPosition(res => {
-  //     console.log('成功',res)
-  // },err =>{ 
-  //     console.log('失败',err)
-  // },{
-  //   timeout:3000
-  // })
-  // }
+  const positionClick = ()=> {
+    navigator.geolocation.getCurrentPosition(res => {
+      console.log('成功',res)
+  },err =>{ 
+      console.log('失败',err)
+  },{
+    timeout:3000
+  })
+  }
 
 // 获取当前城市回显示
 const cityStore = useCityStore()
 //从store里拿在city组件里选择的位置进行回显
 const {currentCity} = storeToRefs(cityStore)
 
-//设置时间格式化
-//1.设置刚进入页面的住房时间 今天和明天
-const nowDate  = new Date() //拿到当前时间
-//setDate()设置月份中的日期 拿到当前的时间戳
-const nextDate = new Date()
-nextDate.setDate(nowDate.getDate() + 1)
+const mainStore = useMainStore()
+const {nowDate,nextDate} = storeToRefs(mainStore)
 
-//2.将时间格式化
-const startTime = ref(formatMonthDay(nowDate))
+//2.将时间格式化 第一步抽到main store里面了
+const startTime = computed(() => formatMonthDay(nowDate.value))
 // console.log(nextDate)
-const endTime = ref(formatMonthDay(nextDate))
+const endTime = computed(() => formatMonthDay(nextDate.value))
 
 //3.计算停留的时间
-const stayCount = ref(getDiffDays(nowDate,nextDate))
+const stayCount = ref(getDiffDays(nowDate.value,nextDate.value))
 
 // 日历相关的时间格式
 const showCalendar = ref(false)
@@ -115,8 +113,8 @@ const onConfirm = (value) => {
   const selectStartTime = value[0]
   const selectEndTime = value[1]
   //将新选择的时间进行格式化然后修改页面的显示日期
-  startTime.value = formatMonthDay(selectStartTime)
-  endTime.value = formatMonthDay(selectEndTime)
+  mainStore.nowDate = selectStartTime
+  mainStore.nextDate = selectEndTime
   showCalendar.value = false
   //设置修改后的日期的停留天数
   stayCount.value = getDiffDays(selectStartTime,selectEndTime)
@@ -126,7 +124,17 @@ const onConfirm = (value) => {
 const homeStore = useHomeStore()
 const { hotSuggests } = storeToRefs(homeStore)
 
-
+//点击搜索路由跳转
+const seachBtn = () => {
+  router.push({
+    path:'/search',
+    query:{
+      startTime:startTime.value,
+      endTime:endTime.value,
+      currentCity:currentCity.value.cityName
+    }
+  })
+}
 </script>
 
 <style  lang="less" scoped>
@@ -185,6 +193,11 @@ const { hotSuggests } = storeToRefs(homeStore)
   .start,.stay,.end{
     flex: 1;
   }
+  .end {
+    .data{
+    float:right;
+  }
+  }
     .data{
       display: flex;
       flex-direction: column;
@@ -231,10 +244,12 @@ const { hotSuggests } = storeToRefs(homeStore)
     font-size: 18px;
     font-weight: 500;
     border-radius: 20px;
-    background-color: var(--primary-color);
+    // background-color: var(--primary-color);
     color: #fff;
     line-height: 38px;
     text-align: center;
+    background-image: var(--theme-linear-gradient);
+
   }
 }
 
