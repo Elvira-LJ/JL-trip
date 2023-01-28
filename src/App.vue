@@ -6,7 +6,7 @@
       </keep-alive>
       <component :is="Component" v-if="!$route.meta.keepAlive"></component>
     </router-view>
-    <tab-bar v-if="!route.meta.hideTabBar"/>
+    <tab-bar v-show="!route.meta.hideTabBar"/>
     <loading/>
   </div>
 </template>

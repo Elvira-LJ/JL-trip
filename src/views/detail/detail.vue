@@ -1,8 +1,8 @@
 <template>
   <div class="detail top-page" ref="detailEl">
-    <van-tabs class="tabs" @click-tab="onClickTab" v-if="showTabControl">
+    <van-tabs v-model:active='active'  class="tabs" @click-tab="onClickTab" v-if="showTabControl">
       <template v-for="(value,key,index) in sectionEls" :key="index">
-      <van-tab :title=key></van-tab>
+      <van-tab  :title=key></van-tab>
       </template>
     </van-tabs>
 
@@ -12,7 +12,7 @@
       left-arrow
       @click-left="onClickLeft"
     />
-    <div class="main" v-if="mainPart">
+    <div class="main" v-if="mainPart" v-memo="[mainPart]">
       <detail-swipe  :swipe-data="mainPart.topModule.housePicture.housePics"/>
       <detail-infos name="描述" :ref="getSectionRef" :get-infos="mainPart.topModule"/>
       <detail-facility name="设施" :ref="getSectionRef" :facility-data="mainPart.dynamicModule.facilityModule.houseFacility"/>
@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import DetailSwipe from './cpns/detail_01-swipe.vue'
 import DetailInfos from "./cpns/detail_02-infos.vue";
@@ -78,8 +78,9 @@ getDetailData(houseId).then(res => {
 
 const sectionEls = ref({}) 
 const getSectionRef = (value) => {
+  if(!value) return 
   //拿到绑定了ref:getSectionRef的子组件的name作为sectionEls对象的key
-  const key = value?.$el?.getAttribute('name')
+  const key = value.$el.getAttribute('name')
   //将该key的value值设为该子组件的根元素
   sectionEls.value[key] = value?.$el
   //这样一旦绑定ref为getSectionRef的组件都放在了这个sectionEls这个对象里(key是组件的name，value是组件)
@@ -93,25 +94,60 @@ const showTabControl = computed(() => {
   return scrollTop.value >= 250
 })
 
+let clickTab = false
+let currentDistance = -1
 const onClickTab = (index) => {
-  console.log(index.name)
+
+  // console.log(index.name)
   //index.name是当前点击的索引 通过索引拿到当前点击的对象的key值
   const key = Object.keys(sectionEls.value)[index.name]
   //通过key值找到对应的组件 objetc[key] = value
   const el = sectionEls.value[key]
   //拿到该组件距离顶部的距离
-  let instance = el.offsetTop
+  let distance = el.offsetTop
   //如果不是第一个，就要-44 因为第一个还没显示那个导航，
   if(index.name !== 0){
-    instance = instance -44
+    distance = distance -44
   }
+
+  clickTab = true
+  currentDistance = distance
+
 //detailEl.value 拿到详情页组件
   detailEl.value.scrollTo({
-    top:instance,
+    top:distance,
     behavior: "smooth"
   })
 }
+//vant-tabs里的v-model
+const active = ref(0)
 
+//1.监听页面发生滚动
+watch(scrollTop,(newValue) => {
+  if(currentDistance === newValue){
+    clickTab = false
+  }
+
+  if(clickTab) return
+//获取所有区域的offsetTop Object.values(sectionEls.value)拿到的是对象里的value value就是每一个子组件
+const els = Object.values(sectionEls.value)
+//将每个子组件距离顶部的高度计算出来放到数组里
+const value = els.map(el => el.offsetTop)
+
+  //2.根据newValue去匹配相应的索引值
+  let index = value.length - 1
+for(let i = 0; i < value.length;i++){
+  const top = value[i]
+  if(top > newValue + 44){
+    index = i -1 
+    break
+  }
+}
+//修改当前vant-tabs的索引
+active.value = index
+})
+
+    
 </script>
 
 <style  lang="less" scoped>

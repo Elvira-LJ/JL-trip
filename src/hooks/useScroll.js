@@ -32,23 +32,23 @@ export default function useScroll(elRef) {
         }, 100)
         // 组件挂载的时候，监听
     onMounted(() => {
-        //传过来的是ref 在onMounted可以确定组件一定是挂载了的 所以一定可以拿到该ref的value，也就是钙元素
-        if (elRef) {
-            el = elRef.value
-        }
-        el.addEventListener('scroll', scrollListenerHandler)
-    })
-    onActivated(() => {
-            // console.log('开始')
+            //传过来的是ref 在onMounted可以确定组件一定是挂载了的 所以一定可以拿到该ref的value，也就是钙元素
+            if (elRef) {
+                el = elRef.value
+            }
             el.addEventListener('scroll', scrollListenerHandler)
         })
+        // onActivated(() => {
+        //         // console.log('开始')
+        //         el.addEventListener('scroll', scrollListenerHandler)
+        //     })
         //组件卸载的时候，停止监听
     onUnmounted(() => {
-        el.removeEventListener('scroll', scrollListenerHandler)
-    })
-    onDeactivated(() => {
-        el.removeEventListener('scroll', scrollListenerHandler)
-    })
+            el.removeEventListener('scroll', scrollListenerHandler)
+        })
+        // onDeactivated(() => {
+        //     el.removeEventListener('scroll', scrollListenerHandler)
+        // })
 
     return { isReachBottom, scrollHeight, clientHeight, scrollTop }
 }
