@@ -51,7 +51,8 @@
   </div>
 
   <div class="section search-btn">
-    <div class="btn" @click="seachBtn">开始搜索</div>
+    <div class="btn" >开始搜索</div>
+    <!-- <div class="btn" @click="seachBtn">开始搜索</div> -->
   </div>
   </div>
 </template>
